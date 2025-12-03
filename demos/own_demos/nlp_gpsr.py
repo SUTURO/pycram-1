@@ -9,18 +9,20 @@ from std_msgs.msg import String
 
 from pycram.datastructures.enums import ImageEnum
 
+from time import sleep
+
 # fast komplett übernommen von give me a hand, umgeschrieben für ROS2
 
-response = []
 confirmation = []
 callback = False
 timeout = 15
 
 
+
 class NLP_GPSR(Node):
     def __init__(self):
 
-        rclpy.init()
+        # rclpy.init()
         super().__init__('nlp_gpsr')
 
         # Publisher
@@ -99,13 +101,15 @@ class NLP_GPSR(Node):
 
 
     def talk_nlp(self, timeout=15):
+        sleep(2)
+
         self._start_listening()
 
         executor = SingleThreadedExecutor()
         executor.add_node(self)
 
         start_time = time.time()
-        while not response != [] and (time.time() - start_time < timeout):
+        while not self.callback and (time.time() - start_time < timeout):
             executor.spin_once(timeout_sec=0.1)
         if self.callback:
             print("Received response:", self.response)
@@ -134,7 +138,7 @@ class NLP_GPSR(Node):
 
 
 def main():
-    # rclpy.init()
+    rclpy.init()
     nlp = NLP_GPSR()
     response = nlp.talk_nlp()
     print("Final response:", response)

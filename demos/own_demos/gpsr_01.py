@@ -69,8 +69,6 @@ context = Context.from_world(world)
 """
 # ---------------------------------------------------------------------------------------------
 
-nlp = nlp_gpsr.NLP_GPSR()
-
 """
 processes the response, filters out the intent
 """
@@ -91,9 +89,10 @@ def process_response(lst: list[Any]):
 
 
 
-#------------------------------------------------------------------------------------------------
+#------------------------Methods for solving tasks------------------------------------------------------------------------
 """
 for task take_obj_from_plcmt
+takes an object from a location
 """
 def take_obj_from_plcmt(location: String, obj: String):
     global object_name_iteration
@@ -186,19 +185,28 @@ def start_nav(pos_x: float, pos_y: float):
 """
 gets nlp response, processes it and ask for the next response
 """
-while rclpy.ok():
-    object_name_iteration = 0
-    wait = True
-    nlp.talk_nlp()
+if __name__ == '__main__':
+    rclpy.init()
+
+    sleep(3)
+
+    node = nlp_gpsr.NLP_GPSR()
+    while rclpy.ok():
+        object_name_iteration = 0
+        wait = True
+        resp = node.talk_nlp()
 
 
-    while wait:
-        #process_response(test_response)
-        #sleep(7)
-        if nlp.response:
-            print("Got response in gpsr_01.py: ", nlp.response)
-            process_response(nlp.response)
-            wait = False
-            nlp.response = []
+        while wait:
+            #process_response(test_response)
+            #sleep(7)
+            if resp:
+                print("Got response in gpsr_01.py: ", resp)
+                process_response(resp)
+                wait = False
+                resp = []
+            else:
+                print("no response yet")
+                wait = False
 
 
