@@ -49,6 +49,10 @@ spoon = STLParser(os.path.join(os.path.dirname(__file__), "..", "..", "resources
 bowl = STLParser(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "objects", "bowl.stl")).parse()
 
 """
+The following block shows how objects can be merged into the world model and connected
+to other world elements. Left in comments because it doesn`t work right now and I don`t know how to solve it.
+
+
 with world.modify_world():
     world.merge_world_at_pose(bowl, TransformationMatrix.from_xyz_quaternion(2.4, 2.2, 1, reference_frame=world.root))
     connection = FixedConnection(parent=world.get_body_by_name("cabinet10_drawer_top"), child=spoon.root)
@@ -70,7 +74,18 @@ context = Context.from_world(world)
 # ---------------------------------------------------------------------------------------------
 
 """
-processes the response, filters out the intent
+Processes the NLP module output and dispatches the correct action.
+
+    Expected format for `lst`:
+        [intent, item, item_entity, item_property, item_action, item_number, to_who, location]
+
+    Parameters:
+        lst (list[Any]): Parsed response from NLP module.
+
+    Behavior:
+        - Checks the intent (lst[0])
+        - Calls appropriate task function
+
 """
 # response = [intent, item, item_entity, item_property, item_action, item_number, to_who, location]
 def process_response(lst: list[Any]):
@@ -91,8 +106,17 @@ def process_response(lst: list[Any]):
 
 #------------------------Methods for solving tasks------------------------------------------------------------------------
 """
-for task take_obj_from_plcmt
-takes an object from a location
+Task: Take an object from a specified location.
+
+    Parameters:
+        location (String): Location keyword ("kitchen", "living room", etc.)
+        obj (String): Object name as string.
+
+    Notes:
+        - Creates a unique object name via global counter.
+        - Uses STLParser to load object model.
+        - TODO: Does not yet execute pick action (future work).
+
 """
 def take_obj_from_plcmt(location: String, obj: String):
     global object_name_iteration
@@ -111,7 +135,15 @@ def take_obj_from_plcmt(location: String, obj: String):
     print("Finished Object: " + finished_object.__str__())
 
 """
-drive to a location
+Navigates the robot to a specified location.
+
+Parameters:
+    location (String): Target location keyword.
+
+Behavior:
+    - Resolves location to a pose.
+    - Starts Nav2 navigation to the position.
+    
 """
 def driveTo(location: String):
     goal = _location_from_string(location)
@@ -121,7 +153,16 @@ def driveTo(location: String):
 
 #----------------------------HELPER METHODS------------------------------------------------------------------
 """
-extract location from string
+Converts a location keyword into a PoseStamped placeholder.
+
+    Parameters:
+        location (String): "kitchen", "living room", etc.
+
+    Returns:
+        PoseStamped: Predefined placeholder pose.
+
+    Raises:
+        Logs an exception for unknown locations.
 """
 def _location_from_string(location: String):
     match location:
@@ -167,9 +208,22 @@ def _find_instance_from_string(obj: String):
     return None
 """
 
+
+
 """
 kopiert von Ansgar, angepasst, dass x und y Koordinate übergeben werden,
 PoseSta, da nicht der pycram datatype benutzt wird wie im restlichen file, sondern der von geometry_msgs
+
+
+Starts Nav2 navigation to the specified XY position.
+
+    Parameters:
+        pos_x (float): X coordinate in map frame
+        pos_y (float): Y coordinate in map frame
+
+    Behavior:
+        - Creates a geometry_msgs/PoseStamped
+        - Calls Nav2 wrapper `nav2_move.start_nav_to_pose`
 """
 def start_nav(pos_x: float, pos_y: float):
     pos = Pose(position=Point(x=pos_x, y=pos_y))
@@ -183,7 +237,11 @@ def start_nav(pos_x: float, pos_y: float):
 
 # MAIN CODE
 """
-gets nlp response, processes it and ask for the next response
+Main execution loop:
+        - Initializes ROS2
+        - Creates NLP node
+        - Waits for spoken commands
+        - Processes received NLP responses
 """
 if __name__ == '__main__':
     rclpy.init()
