@@ -246,6 +246,8 @@ Main execution loop:
 if __name__ == '__main__':
     rclpy.init()
 
+    start_nav(3, 3)
+    """
     sleep(3)
 
     node = nlp_gpsr.NLP_GPSR()
@@ -268,3 +270,4 @@ if __name__ == '__main__':
                 wait = False
 
 
+    """
